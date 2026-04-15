@@ -39,6 +39,14 @@ export default function RevealSequenceController({
 
   const runSequence = useCallback(() => {
     clearAllTimeouts();
+    // Reset all reveal state so the animation replays from scratch
+    // (handles re-navigation and replay scenarios where Zustand retains stale state)
+    useRevealStore.setState({
+      revealedZones: [],
+      activeRevealIndex: -1,
+      hoveredZoneId: null,
+      skipped: false,
+    });
     setIsPlaying(true);
     setStage("loading");
     setProgress(0);
