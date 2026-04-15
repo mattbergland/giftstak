@@ -33,6 +33,12 @@ export const ANIMATION_CONFIG = {
   /** Idle rotation speed (radians per second) — very subtle */
   idleRotationSpeed: 0.08,
 
+  /** Idle sway amplitude (radians) — how far the box oscillates */
+  idleSwayAmplitude: 0.26,
+
+  /** Idle sway speed — controls oscillation frequency */
+  idleSwaySpeed: 0.5,
+
   /** Total approximate reveal time: ~12 seconds */
 } as const;
 

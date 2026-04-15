@@ -35,13 +35,17 @@ function FallbackBox() {
   const groupRef = useRef<THREE.Group>(null);
   const lidRef = useRef<THREE.Group>(null);
   const { stage } = useRevealStore();
+  const elapsed = useRef(0);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
 
-    // Subtle idle rotation
+    // Gentle back-and-forth oscillation
     if (stage === "complete" || stage === "box-appear") {
-      groupRef.current.rotation.y += ANIMATION_CONFIG.idleRotationSpeed * delta;
+      elapsed.current += delta;
+      groupRef.current.rotation.y =
+        Math.sin(elapsed.current * ANIMATION_CONFIG.idleSwaySpeed) *
+        ANIMATION_CONFIG.idleSwayAmplitude;
     }
   });
 
@@ -135,19 +139,18 @@ function logSceneGraph(obj: THREE.Object3D, depth = 0) {
   obj.children.forEach((child) => logSceneGraph(child, depth + 1));
 }
 
-/** GLB model loader — renders model as base with a procedural animated lid */
+/** GLB model loader — renders the open box model (no procedural lid) */
 function GiftBoxModel({ url }: { url: string }) {
   const groupRef = useRef<THREE.Group>(null);
-  const lidRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(url);
   const { stage } = useRevealStore();
+  const elapsed = useRef(0);
 
   // Log scene graph on first load
   useEffect(() => {
     console.group("=== GLB Scene Graph ===");
     console.log(`URL: ${url}`);
     logSceneGraph(scene);
-    // Identify likely mesh roles
     const meshes: { name: string; vertices: number }[] = [];
     scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
@@ -160,85 +163,30 @@ function GiftBoxModel({ url }: { url: string }) {
     });
     console.log("\nMesh summary:", meshes);
     console.log(
-      "\nNote: This GLB is a single monolithic mesh with no separate lid/base/tray nodes."
-    );
-    console.log(
-      "The procedural lid pivot-group approach is the correct workaround."
+      "\nNote: This GLB is a single monolithic mesh — no separate lid/base/tray nodes."
     );
     console.groupEnd();
   }, [scene, url]);
 
-  const clonedScene = useMemo(() => {
-    const clone = scene.clone();
-    // Compute bounding box to determine model size for lid placement
-    const box = new THREE.Box3().setFromObject(clone);
-    const size = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
-    // Store dimensions on the clone's userData for lid sizing
-    clone.userData.boxSize = size;
-    clone.userData.boxCenter = center;
-    clone.userData.boxMin = box.min.clone();
-    clone.userData.boxMax = box.max.clone();
-    return clone;
-  }, [scene]);
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
 
-  // Get model dimensions for lid
-  const { lidWidth, lidDepth, lidY, lidPivotZ } = useMemo(() => {
-    const size = clonedScene.userData.boxSize as THREE.Vector3;
-    const max = clonedScene.userData.boxMax as THREE.Vector3;
-    const min = clonedScene.userData.boxMin as THREE.Vector3;
-    return {
-      lidWidth: size.x * 1.02,
-      lidDepth: size.z * 1.02,
-      lidY: max.y,
-      lidPivotZ: min.z,
-    };
-  }, [clonedScene]);
-
-  // Animate lid opening
-  useFrame(() => {
-    if (!lidRef.current) return;
-    const targetAngle =
-      stage === "lid-open" || stage === "revealing" || stage === "complete"
-        ? -Math.PI / 2.2
-        : 0;
-    lidRef.current.rotation.x = THREE.MathUtils.lerp(
-      lidRef.current.rotation.x,
-      targetAngle,
-      0.04
-    );
-  });
-
-  // Idle rotation
+  // Gentle back-and-forth oscillation instead of continuous rotation.
+  // This keeps callout lines from tangling.
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     if (stage === "complete" || stage === "box-appear") {
-      groupRef.current.rotation.y += ANIMATION_CONFIG.idleRotationSpeed * delta;
+      elapsed.current += delta;
+      // Oscillate within ±15 degrees (~0.26 rad) at a slow pace
+      const swayAngle = ANIMATION_CONFIG.idleSwayAmplitude;
+      const swaySpeed = ANIMATION_CONFIG.idleSwaySpeed;
+      groupRef.current.rotation.y =
+        Math.sin(elapsed.current * swaySpeed) * swayAngle;
     }
   });
 
   return (
     <group ref={groupRef}>
-      {/* GLB model as the base box */}
       <primitive object={clonedScene} scale={1.8} />
-
-      {/* Procedural lid — pivots from back edge */}
-      <group position={[0, lidY * 1.8, lidPivotZ * 1.8]} ref={lidRef}>
-        {/* Lid panel */}
-        <mesh position={[0, 0.03, (-lidPivotZ * 1.8) + (lidDepth * 1.8 * 0.5)]}>
-          <boxGeometry args={[lidWidth * 1.8, 0.06, lidDepth * 1.8]} />
-          <meshStandardMaterial color="#D4CCC2" roughness={0.3} metalness={0.15} />
-        </mesh>
-        {/* Gold ribbon cross on lid */}
-        <mesh position={[0, 0.07, (-lidPivotZ * 1.8) + (lidDepth * 1.8 * 0.5)]}>
-          <boxGeometry args={[0.1, 0.02, lidDepth * 1.8]} />
-          <meshStandardMaterial color="#C4A35A" roughness={0.3} metalness={0.3} />
-        </mesh>
-        <mesh position={[0, 0.07, (-lidPivotZ * 1.8) + (lidDepth * 1.8 * 0.5)]}>
-          <boxGeometry args={[lidWidth * 1.8, 0.02, 0.1]} />
-          <meshStandardMaterial color="#C4A35A" roughness={0.3} metalness={0.3} />
-        </mesh>
-      </group>
     </group>
   );
 }
