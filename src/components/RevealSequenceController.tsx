@@ -19,7 +19,6 @@ export default function RevealSequenceController({
     setActiveRevealIndex,
     setIsPlaying,
     setProgress,
-    isPlaying,
   } = useRevealStore();
 
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
@@ -114,16 +113,20 @@ export default function RevealSequenceController({
     return clearAllTimeouts;
   }, [runSequence, clearAllTimeouts]);
 
-  // Expose replay through store subscription
+  // Expose replay and skip through store subscription
   useEffect(() => {
     const unsub = useRevealStore.subscribe((state, prevState) => {
       if (state.stage === "loading" && prevState.stage !== "loading" && !state.isPlaying) {
         // Replay triggered
         runSequence();
       }
+      if (state.skipped && !prevState.skipped) {
+        // Skip triggered — cancel all pending timeouts
+        clearAllTimeouts();
+      }
     });
     return unsub;
-  }, [runSequence]);
+  }, [runSequence, clearAllTimeouts]);
 
   return (
     <AnimatePresence>
