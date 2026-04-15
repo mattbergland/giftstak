@@ -172,11 +172,14 @@ function GiftBoxModel({ url }: { url: string }) {
   );
 }
 
-/** Camera controller for cinematic movements */
+/** Camera controller for cinematic movements.
+ *  Drives the camera during animation stages, then yields to OrbitControls
+ *  once the reveal is complete and the camera has converged. */
 function CameraController() {
   const { camera } = useThree();
   const { stage } = useRevealStore();
   const targetPos = useRef(new THREE.Vector3(...CAMERA_CONFIG.initialPosition));
+  const converged = useRef(false);
 
   useEffect(() => {
     camera.position.set(...CAMERA_CONFIG.initialPosition);
@@ -184,6 +187,7 @@ function CameraController() {
   }, [camera]);
 
   useEffect(() => {
+    converged.current = false; // reset on stage change so animation drives again
     if (stage === "lid-open" || stage === "revealing" || stage === "complete") {
       targetPos.current.set(...CAMERA_CONFIG.revealPosition);
     } else {
@@ -192,8 +196,16 @@ function CameraController() {
   }, [stage]);
 
   useFrame(() => {
+    // Once converged in the complete stage, stop overriding so OrbitControls works
+    if (converged.current) return;
+
     camera.position.lerp(targetPos.current, 0.02);
     camera.lookAt(...CAMERA_CONFIG.target);
+
+    // Check convergence: if close enough to target in complete stage, hand off to OrbitControls
+    if (stage === "complete" && camera.position.distanceTo(targetPos.current) < 0.01) {
+      converged.current = true;
+    }
   });
 
   return null;
@@ -240,7 +252,9 @@ interface BasketRevealSceneProps {
   onAnchorPositionsUpdate?: (positions: Record<string, { x: number; y: number }>) => void;
 }
 
-/** Projects 3D anchor points to screen space each frame */
+/** Projects 3D anchor points to screen space.
+ *  Only triggers a React state update when positions shift by more than 1px
+ *  to avoid re-rendering the entire page tree at 60fps. */
 function AnchorProjector({
   anchors,
   onUpdate,
@@ -249,22 +263,31 @@ function AnchorProjector({
   onUpdate: (positions: Record<string, { x: number; y: number }>) => void;
 }) {
   const { camera, size } = useThree();
+  const prevPositions = useRef<Record<string, { x: number; y: number }>>({});
 
   useFrame(() => {
     const projected: Record<string, { x: number; y: number }> = {};
     const vec = new THREE.Vector3();
+    let changed = false;
 
     for (const [zoneId, pos] of Object.entries(anchors)) {
       vec.set(pos[0], pos[1], pos[2]);
       vec.project(camera);
 
-      projected[zoneId] = {
-        x: ((vec.x + 1) / 2) * size.width,
-        y: ((-vec.y + 1) / 2) * size.height,
-      };
+      const x = ((vec.x + 1) / 2) * size.width;
+      const y = ((-vec.y + 1) / 2) * size.height;
+      projected[zoneId] = { x, y };
+
+      const prev = prevPositions.current[zoneId];
+      if (!prev || Math.abs(prev.x - x) > 1 || Math.abs(prev.y - y) > 1) {
+        changed = true;
+      }
     }
 
-    onUpdate(projected);
+    if (changed) {
+      prevPositions.current = projected;
+      onUpdate(projected);
+    }
   });
 
   return null;
@@ -353,6 +376,7 @@ export default function BasketRevealScene({
           maxPolarAngle={CAMERA_CONFIG.maxPolarAngle}
           minDistance={CAMERA_CONFIG.minDistance}
           maxDistance={CAMERA_CONFIG.maxDistance}
+          target={CAMERA_CONFIG.target}
           enableDamping
           dampingFactor={0.05}
           makeDefault
