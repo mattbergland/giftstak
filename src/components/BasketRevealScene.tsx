@@ -32,22 +32,8 @@ class ModelErrorBoundary extends React.Component<
 
 /** Fallback box when GLB is not available */
 function FallbackBox() {
-  const groupRef = useRef<THREE.Group>(null);
   const lidRef = useRef<THREE.Group>(null);
   const { stage } = useRevealStore();
-  const elapsed = useRef(0);
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-
-    // Gentle back-and-forth oscillation
-    if (stage === "complete" || stage === "box-appear") {
-      elapsed.current += delta;
-      groupRef.current.rotation.y =
-        Math.sin(elapsed.current * ANIMATION_CONFIG.idleSwaySpeed) *
-        ANIMATION_CONFIG.idleSwayAmplitude;
-    }
-  });
 
   useFrame(() => {
     if (!lidRef.current) return;
@@ -65,7 +51,7 @@ function FallbackBox() {
   });
 
   return (
-    <group ref={groupRef}>
+    <group>
       {/* Base box */}
       <mesh position={[0, 0.25, 0]}>
         <boxGeometry args={[1.6, 0.5, 1.2]} />
@@ -139,12 +125,10 @@ function logSceneGraph(obj: THREE.Object3D, depth = 0) {
   obj.children.forEach((child) => logSceneGraph(child, depth + 1));
 }
 
-/** GLB model loader — renders the open box model (no procedural lid) */
+/** GLB model loader — renders the open box model (no procedural lid).
+ *  Oscillation is handled by the parent OscillatingGroup. */
 function GiftBoxModel({ url }: { url: string }) {
-  const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(url);
-  const { stage } = useRevealStore();
-  const elapsed = useRef(0);
 
   // Log scene graph on first load
   useEffect(() => {
@@ -170,23 +154,34 @@ function GiftBoxModel({ url }: { url: string }) {
 
   const clonedScene = useMemo(() => scene.clone(), [scene]);
 
-  // Gentle back-and-forth oscillation instead of continuous rotation.
-  // This keeps callout lines from tangling.
+  return <primitive object={clonedScene} scale={1.8} />;
+}
+
+/** Wrapper group that oscillates, containing both the model and anchor markers.
+ *  This ensures anchors rotate with the box. */
+function OscillatingGroup({
+  children,
+  groupRef,
+}: {
+  children: React.ReactNode;
+  groupRef: React.MutableRefObject<THREE.Group | null>;
+}) {
+  const { stage } = useRevealStore();
+  const elapsed = useRef(0);
+
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     if (stage === "complete" || stage === "box-appear") {
       elapsed.current += delta;
-      // Oscillate within ±15 degrees (~0.26 rad) at a slow pace
-      const swayAngle = ANIMATION_CONFIG.idleSwayAmplitude;
-      const swaySpeed = ANIMATION_CONFIG.idleSwaySpeed;
       groupRef.current.rotation.y =
-        Math.sin(elapsed.current * swaySpeed) * swayAngle;
+        Math.sin(elapsed.current * ANIMATION_CONFIG.idleSwaySpeed) *
+        ANIMATION_CONFIG.idleSwayAmplitude;
     }
   });
 
   return (
-    <group ref={groupRef}>
-      <primitive object={clonedScene} scale={1.8} />
+    <group ref={(node) => { groupRef.current = node; }}>
+      {children}
     </group>
   );
 }
@@ -324,14 +319,18 @@ interface BasketRevealSceneProps {
 }
 
 /** Projects 3D anchor points to screen space.
+ *  Reads world-space positions from the oscillating group so that
+ *  projected 2D positions track the rotating box.
  *  Only triggers a React state update when positions shift by more than 1px
  *  to avoid re-rendering the entire page tree at 60fps. */
 function AnchorProjector({
   anchors,
   onUpdate,
+  parentGroupRef,
 }: {
   anchors: Record<string, [number, number, number]>;
   onUpdate: (positions: Record<string, { x: number; y: number }>) => void;
+  parentGroupRef: React.RefObject<THREE.Group | null>;
 }) {
   const { camera, size } = useThree();
   const prevPositions = useRef<Record<string, { x: number; y: number }>>({});
@@ -343,6 +342,10 @@ function AnchorProjector({
 
     for (const [zoneId, pos] of Object.entries(anchors)) {
       vec.set(pos[0], pos[1], pos[2]);
+      // Transform from local group space to world space
+      if (parentGroupRef.current) {
+        parentGroupRef.current.localToWorld(vec);
+      }
       vec.project(camera);
 
       const x = ((vec.x + 1) / 2) * size.width;
@@ -372,6 +375,7 @@ export default function BasketRevealScene({
 }: BasketRevealSceneProps) {
   const { stage } = useRevealStore();
   const visible = stage !== "loading";
+  const boxGroupRef = useRef<THREE.Group>(null);
 
   return (
     <div
@@ -421,29 +425,33 @@ export default function BasketRevealScene({
           color="#3E3935"
         />
 
-        {/* The gift box — ErrorBoundary catches GLB load failures */}
-        <Suspense fallback={null}>
-          <ModelErrorBoundary fallback={<FallbackBox />}>
-            {glbUrl ? (
-              <GiftBoxModel url={glbUrl} />
-            ) : (
-              <FallbackBox />
-            )}
-          </ModelErrorBoundary>
-        </Suspense>
+        {/* Oscillating group: model + anchors rotate together */}
+        <OscillatingGroup groupRef={boxGroupRef}>
+          {/* The gift box — ErrorBoundary catches GLB load failures */}
+          <Suspense fallback={null}>
+            <ModelErrorBoundary fallback={<FallbackBox />}>
+              {glbUrl ? (
+                <GiftBoxModel url={glbUrl} />
+              ) : (
+                <FallbackBox />
+              )}
+            </ModelErrorBoundary>
+          </Suspense>
 
-        {/* Zone highlight markers */}
-        {debugMode ? (
-          <DebugAnchors anchors={anchors} />
-        ) : (
-          <ZoneHighlights anchors={anchors} />
-        )}
+          {/* Zone highlight markers — inside the group so they rotate with the box */}
+          {debugMode ? (
+            <DebugAnchors anchors={anchors} />
+          ) : (
+            <ZoneHighlights anchors={anchors} />
+          )}
+        </OscillatingGroup>
 
-        {/* Project anchors to screen space */}
+        {/* Project anchors to screen space (outside group, reads world positions) */}
         {onAnchorPositionsUpdate && (
           <AnchorProjector
             anchors={anchors}
             onUpdate={onAnchorPositionsUpdate}
+            parentGroupRef={boxGroupRef}
           />
         )}
 
