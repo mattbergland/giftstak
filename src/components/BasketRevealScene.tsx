@@ -1,11 +1,33 @@
 "use client";
 
-import { useRef, useEffect, useMemo, Suspense } from "react";
+import React, { useRef, useEffect, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Environment, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { useRevealStore } from "@/lib/reveal-store";
 import { CAMERA_CONFIG, ANIMATION_CONFIG } from "@/lib/animation-config";
+
+/** ErrorBoundary that catches GLB load failures and renders FallbackBox instead */
+class ModelErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 /** Fallback box when GLB is not available */
 function FallbackBox() {
@@ -349,13 +371,15 @@ export default function BasketRevealScene({
           color="#3E3935"
         />
 
-        {/* The gift box */}
+        {/* The gift box — ErrorBoundary catches GLB load failures */}
         <Suspense fallback={null}>
-          {glbUrl ? (
-            <GiftBoxModel url={glbUrl} />
-          ) : (
-            <FallbackBox />
-          )}
+          <ModelErrorBoundary fallback={<FallbackBox />}>
+            {glbUrl ? (
+              <GiftBoxModel url={glbUrl} />
+            ) : (
+              <FallbackBox />
+            )}
+          </ModelErrorBoundary>
         </Suspense>
 
         {/* Zone highlight markers */}
