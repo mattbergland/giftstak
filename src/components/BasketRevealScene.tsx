@@ -2,10 +2,11 @@
 
 import React, { useRef, useEffect, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Environment, ContactShadows } from "@react-three/drei";
+import { OrbitControls, useGLTF, Environment, ContactShadows, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useRevealStore } from "@/lib/reveal-store";
 import { CAMERA_CONFIG, ANIMATION_CONFIG } from "@/lib/animation-config";
+import { ZONE_COLORS } from "@/components/DebugAnchorPanel";
 
 /** ErrorBoundary that catches GLB load failures and renders FallbackBox instead */
 class ModelErrorBoundary extends React.Component<
@@ -112,12 +113,60 @@ function FallbackBox() {
   );
 }
 
+/** Logs the full GLB scene graph to the console for mesh identification */
+function logSceneGraph(obj: THREE.Object3D, depth = 0) {
+  const indent = "  ".repeat(depth);
+  const type = (obj as THREE.Mesh).isMesh
+    ? "Mesh"
+    : (obj as THREE.Group).isGroup
+      ? "Group"
+      : obj.type;
+  const geo = (obj as THREE.Mesh).geometry;
+  const geoInfo = geo
+    ? ` [vertices: ${geo.attributes?.position?.count ?? "?"}]`
+    : "";
+  const mat = (obj as THREE.Mesh).material;
+  const matName = mat && !Array.isArray(mat) ? ` mat:"${(mat as THREE.Material).name || mat.type}"` : "";
+  console.log(
+    `${indent}${type} "${obj.name || "(unnamed)"}"${geoInfo}${matName}` +
+      ` pos:(${obj.position.x.toFixed(2)}, ${obj.position.y.toFixed(2)}, ${obj.position.z.toFixed(2)})` +
+      ` scale:(${obj.scale.x.toFixed(2)}, ${obj.scale.y.toFixed(2)}, ${obj.scale.z.toFixed(2)})`
+  );
+  obj.children.forEach((child) => logSceneGraph(child, depth + 1));
+}
+
 /** GLB model loader — renders model as base with a procedural animated lid */
 function GiftBoxModel({ url }: { url: string }) {
   const groupRef = useRef<THREE.Group>(null);
   const lidRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(url);
   const { stage } = useRevealStore();
+
+  // Log scene graph on first load
+  useEffect(() => {
+    console.group("=== GLB Scene Graph ===");
+    console.log(`URL: ${url}`);
+    logSceneGraph(scene);
+    // Identify likely mesh roles
+    const meshes: { name: string; vertices: number }[] = [];
+    scene.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) {
+        const m = obj as THREE.Mesh;
+        meshes.push({
+          name: m.name || "(unnamed)",
+          vertices: m.geometry?.attributes?.position?.count ?? 0,
+        });
+      }
+    });
+    console.log("\nMesh summary:", meshes);
+    console.log(
+      "\nNote: This GLB is a single monolithic mesh with no separate lid/base/tray nodes."
+    );
+    console.log(
+      "The procedural lid pivot-group approach is the correct workaround."
+    );
+    console.groupEnd();
+  }, [scene, url]);
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
@@ -268,10 +317,62 @@ function ZoneHighlights({ anchors }: { anchors: Record<string, [number, number, 
   );
 }
 
+/** Debug anchor spheres with colored labels rendered inside the Canvas */
+function DebugAnchors({
+  anchors,
+}: {
+  anchors: Record<string, [number, number, number]>;
+}) {
+  return (
+    <>
+      {Object.entries(anchors).map(([zoneId, position]) => {
+        const color = ZONE_COLORS[zoneId] ?? "#ffffff";
+        return (
+          <group key={zoneId} position={position}>
+            {/* Colored sphere */}
+            <mesh>
+              <sphereGeometry args={[0.08, 16, 16]} />
+              <meshStandardMaterial
+                color={color}
+                emissive={color}
+                emissiveIntensity={0.4}
+                transparent
+                opacity={0.85}
+              />
+            </mesh>
+            {/* Zone label */}
+            <Html
+              center
+              distanceFactor={4}
+              style={{
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
+            >
+              <div
+                className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold whitespace-nowrap"
+                style={{
+                  backgroundColor: color,
+                  color: "#fff",
+                  textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+                  transform: "translateY(-18px)",
+                }}
+              >
+                {zoneId}
+              </div>
+            </Html>
+          </group>
+        );
+      })}
+    </>
+  );
+}
+
 interface BasketRevealSceneProps {
   glbUrl?: string;
   anchors: Record<string, [number, number, number]>;
   onAnchorPositionsUpdate?: (positions: Record<string, { x: number; y: number }>) => void;
+  debugMode?: boolean;
 }
 
 /** Projects 3D anchor points to screen space.
@@ -319,6 +420,7 @@ export default function BasketRevealScene({
   glbUrl,
   anchors,
   onAnchorPositionsUpdate,
+  debugMode = false,
 }: BasketRevealSceneProps) {
   const { stage } = useRevealStore();
   const visible = stage !== "loading";
@@ -383,7 +485,11 @@ export default function BasketRevealScene({
         </Suspense>
 
         {/* Zone highlight markers */}
-        <ZoneHighlights anchors={anchors} />
+        {debugMode ? (
+          <DebugAnchors anchors={anchors} />
+        ) : (
+          <ZoneHighlights anchors={anchors} />
+        )}
 
         {/* Project anchors to screen space */}
         {onAnchorPositionsUpdate && (

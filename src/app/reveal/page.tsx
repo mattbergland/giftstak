@@ -11,6 +11,7 @@ import RevealSequenceController from "@/components/RevealSequenceController";
 import ResultTabs from "@/components/ResultTabs";
 import ReplayRevealButton from "@/components/ReplayRevealButton";
 import SkipButton from "@/components/SkipButton";
+import DebugAnchorPanel from "@/components/DebugAnchorPanel";
 
 // Dynamic import for the 3D scene (no SSR)
 const BasketRevealScene = dynamic(
@@ -24,6 +25,10 @@ export default function RevealPage() {
   const [anchorScreenPositions, setAnchorScreenPositions] = useState<
     Record<string, { x: number; y: number }>
   >({});
+  const [debugMode, setDebugMode] = useState(false);
+  const [editableAnchors, setEditableAnchors] = useState<
+    Record<string, [number, number, number]>
+  >({ ...basketAnchors });
 
   const handleAnchorPositionsUpdate = useCallback(
     (positions: Record<string, { x: number; y: number }>) => {
@@ -31,6 +36,31 @@ export default function RevealPage() {
     },
     []
   );
+
+  const handleAnchorChange = useCallback(
+    (zoneId: string, axis: 0 | 1 | 2, value: number) => {
+      setEditableAnchors((prev) => {
+        const current = prev[zoneId] ?? [0, 0, 0];
+        const updated: [number, number, number] = [...current];
+        updated[axis] = Math.round(value * 1000) / 1000; // 3 decimal places
+        return { ...prev, [zoneId]: updated };
+      });
+    },
+    []
+  );
+
+  const handleCopyAnchors = useCallback(() => {
+    const lines = Object.entries(editableAnchors)
+      .map(
+        ([id, pos]) =>
+          `  "${id}": [${pos[0].toFixed(3)}, ${pos[1].toFixed(3)}, ${pos[2].toFixed(3)}],`
+      )
+      .join("\n");
+    const config = `export const basketAnchors: Record<string, [number, number, number]> = {\n${lines}\n};`;
+    navigator.clipboard.writeText(config).then(() => {
+      alert("Anchor config copied to clipboard!");
+    });
+  }, [editableAnchors]);
 
   return (
     <main className="min-h-screen flex flex-col bg-parchment">
@@ -40,6 +70,16 @@ export default function RevealPage() {
           Giftstak
         </a>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setDebugMode((d) => !d)}
+            className={`text-[10px] px-3 py-1 rounded-full border transition-colors font-mono ${
+              debugMode
+                ? "bg-red-500/10 border-red-400 text-red-500"
+                : "bg-warmgray-100 border-warmgray-200 text-warmgray-400 hover:text-warmgray-600"
+            }`}
+          >
+            {debugMode ? "Debug ON" : "Debug Anchors"}
+          </button>
           <ReplayRevealButton />
         </div>
       </header>
@@ -75,8 +115,9 @@ export default function RevealPage() {
           >
             <BasketRevealScene
               glbUrl="/models/gift-box.glb"
-              anchors={basketAnchors}
+              anchors={editableAnchors}
               onAnchorPositionsUpdate={handleAnchorPositionsUpdate}
+              debugMode={debugMode}
             />
           </Suspense>
         </div>
@@ -86,6 +127,15 @@ export default function RevealPage() {
           zones={basket.zones}
           anchorScreenPositions={anchorScreenPositions}
         />
+
+        {/* Debug panel */}
+        {debugMode && (
+          <DebugAnchorPanel
+            anchors={editableAnchors}
+            onAnchorChange={handleAnchorChange}
+            onCopyAnchors={handleCopyAnchors}
+          />
+        )}
 
         {/* Reveal controller (manages timing) */}
         <RevealSequenceController totalZones={basket.zones.length} />
