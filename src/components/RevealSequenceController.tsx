@@ -53,24 +53,27 @@ export default function RevealSequenceController({
 
     // Stage 0 → 1: Box appear
     elapsed += ANIMATION_CONFIG.assemblingDuration;
+    const boxAppearAt = elapsed;
     addTimeout(() => {
       setStage("box-appear");
-      setProgress(elapsed / totalDuration);
-    }, elapsed);
+      setProgress(boxAppearAt / totalDuration);
+    }, boxAppearAt);
 
     // Stage 1 → 2: Lid opens
     elapsed += ANIMATION_CONFIG.boxSettleDuration;
+    const lidOpenAt = elapsed;
     addTimeout(() => {
       setStage("lid-open");
-      setProgress(elapsed / totalDuration);
-    }, elapsed);
+      setProgress(lidOpenAt / totalDuration);
+    }, lidOpenAt);
 
     // After lid opens, pause then start compartments
     elapsed += ANIMATION_CONFIG.lidOpenDuration + ANIMATION_CONFIG.postLidPause;
+    const revealingAt = elapsed;
     addTimeout(() => {
       setStage("revealing");
-      setProgress(elapsed / totalDuration);
-    }, elapsed);
+      setProgress(revealingAt / totalDuration);
+    }, revealingAt);
 
     // Compartments reveal one by one
     for (let i = 0; i < totalZones; i++) {
