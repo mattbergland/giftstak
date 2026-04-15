@@ -74,6 +74,7 @@ export default function RevealPage() {
             }
           >
             <BasketRevealScene
+              glbUrl="/models/gift-box.glb"
               anchors={basketAnchors}
               onAnchorPositionsUpdate={handleAnchorPositionsUpdate}
             />
