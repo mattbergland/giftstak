@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useCallback, useState } from "react";
 import { useRevealStore } from "@/lib/reveal-store";
 import { ANIMATION_CONFIG, ASSEMBLING_PHRASES } from "@/lib/animation-config";
 import { motion, AnimatePresence } from "framer-motion";
@@ -118,8 +118,8 @@ export default function RevealSequenceController({
     revealZone,
   ]);
 
-  // Auto-start on mount
-  useEffect(() => {
+  // Auto-start on mount — useLayoutEffect prevents flash of stale "complete" state
+  useLayoutEffect(() => {
     runSequence();
     return clearAllTimeouts;
   }, [runSequence, clearAllTimeouts]);

@@ -149,9 +149,11 @@ function BasketCard({
             />
           </div>
         ))}
-        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-warmgray-100/40 border border-warmgray-100 flex items-center justify-center">
-          <span className="text-[10px] text-warmgray-400">+{basket.zones.length - 3}</span>
-        </div>
+        {basket.zones.length > 3 && (
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-warmgray-100/40 border border-warmgray-100 flex items-center justify-center">
+            <span className="text-[10px] text-warmgray-400">+{basket.zones.length - 3}</span>
+          </div>
+        )}
       </div>
 
       <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-accent-gold mb-0.5">
