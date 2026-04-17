@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Giftstak — Curated Gift Baskets, Revealed",
+  title: "Giftstak — Locally Curated Gift Baskets",
   description:
-    "AI-curated gift baskets with a cinematic interactive reveal experience.",
+    "Premium gift baskets filled with artisan ingredients from local producers. Choose from city-inspired collections and send the perfect gift.",
 };
 
 export default function RootLayout({

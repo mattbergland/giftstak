@@ -154,7 +154,7 @@ function GiftBoxModel({ url }: { url: string }) {
 
   const clonedScene = useMemo(() => scene.clone(), [scene]);
 
-  return <primitive object={clonedScene} scale={1.8} />;
+  return <primitive object={clonedScene} scale={1.3} />;
 }
 
 /** Wrapper group that oscillates, containing both the model and anchor markers.

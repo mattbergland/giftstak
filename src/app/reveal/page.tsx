@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useRevealStore } from "@/lib/reveal-store";
-import { demoBasket } from "@/lib/basket-data";
+import { getBasketBySlug } from "@/lib/basket-data";
 import { basketAnchors } from "@/lib/anchor-config";
 import CalloutOverlay from "@/components/CalloutOverlay";
 import RevealSequenceController from "@/components/RevealSequenceController";
@@ -19,9 +20,12 @@ const BasketRevealScene = dynamic(
   { ssr: false }
 );
 
-export default function RevealPage() {
+function RevealPageContent() {
+  const searchParams = useSearchParams();
+  const basketSlug = searchParams.get("basket");
+  const basket = getBasketBySlug(basketSlug);
+
   const { stage } = useRevealStore();
-  const basket = demoBasket;
   const [anchorScreenPositions, setAnchorScreenPositions] = useState<
     Record<string, { x: number; y: number }>
   >({});
@@ -42,7 +46,7 @@ export default function RevealPage() {
       setEditableAnchors((prev) => {
         const current = prev[zoneId] ?? [0, 0, 0];
         const updated: [number, number, number] = [...current];
-        updated[axis] = Math.round(value * 1000) / 1000; // 3 decimal places
+        updated[axis] = Math.round(value * 1000) / 1000;
         return { ...prev, [zoneId]: updated };
       });
     },
@@ -70,6 +74,12 @@ export default function RevealPage() {
           Giftstak
         </a>
         <div className="flex items-center gap-4">
+          <a
+            href="/"
+            className="text-xs text-warmgray-400 hover:text-warmgray-600 transition-colors"
+          >
+            All Collections
+          </a>
           <button
             onClick={() => setDebugMode((d) => !d)}
             className={`text-[10px] px-3 py-1 rounded-full border transition-colors font-mono ${
@@ -92,13 +102,16 @@ export default function RevealPage() {
         className="text-center px-6 pt-2 pb-4 z-30 relative"
       >
         <p className="text-[10px] uppercase tracking-[0.3em] text-accent-gold mb-1">
-          Your Curated Selection
+          {basket.region}
         </p>
         <h2 className="font-serif text-2xl sm:text-3xl text-warmgray-800">
           {basket.basketName}
         </h2>
         <p className="text-sm text-warmgray-400 mt-1 max-w-md mx-auto">
           {basket.description}
+        </p>
+        <p className="font-serif text-lg text-warmgray-600 mt-2">
+          ${basket.price}
         </p>
       </motion.div>
 
@@ -155,12 +168,41 @@ export default function RevealPage() {
         <ResultTabs basket={basket} />
       </motion.section>
 
+      {/* Order CTA */}
+      <section className="max-w-3xl mx-auto w-full px-6 pb-10 text-center">
+        <button
+          className="px-8 py-3.5 bg-warmgray-800 text-parchment rounded-lg
+                     font-medium tracking-wide text-sm
+                     hover:bg-warmgray-900 transition-colors duration-200
+                     shadow-lg shadow-warmgray-800/10"
+        >
+          Order This Basket &mdash; ${basket.price}
+        </button>
+        <p className="text-xs text-warmgray-400 mt-3">
+          Bay Area delivery included · Ships in 3–5 days
+        </p>
+      </section>
+
       {/* Footer */}
       <footer className="px-6 py-6 text-center border-t border-warmgray-100">
         <p className="text-xs text-warmgray-400">
-          Giftstak · Curated with care · All ingredients sourced from local artisan producers
+          Giftstak · Locally curated gift baskets · All ingredients sourced from local artisan producers
         </p>
       </footer>
     </main>
+  );
+}
+
+export default function RevealPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-parchment">
+          <p className="text-warmgray-400 text-sm">Loading…</p>
+        </div>
+      }
+    >
+      <RevealPageContent />
+    </Suspense>
   );
 }
