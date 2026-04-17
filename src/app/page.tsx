@@ -66,41 +66,36 @@ export default function HomePage() {
     <main className="h-screen flex flex-col overflow-hidden relative">
       <PainterlyBlobs />
 
-      {/* Nav */}
-      <header className="relative z-10 w-full px-6 py-3 flex items-center justify-between max-w-6xl mx-auto flex-shrink-0">
-        <h1 className="font-serif text-lg text-warmgray-800 tracking-tight">
-          Giftstak
-        </h1>
-        <p className="hidden sm:block text-xs text-warmgray-400 italic">
-          Locally curated gift baskets
+      {/* Nav + inline tagline */}
+      <header className="relative z-10 w-full px-6 py-2 flex items-center justify-between max-w-6xl mx-auto flex-shrink-0">
+        <div className="flex items-baseline gap-3">
+          <h1 className="font-serif text-lg text-warmgray-800 tracking-tight">
+            Giftstak
+          </h1>
+          <p className="hidden sm:block text-xs text-warmgray-400 italic">
+            Artisan baskets, locally gathered
+          </p>
+        </div>
+        <p className="text-[10px] text-warmgray-300">
+          All ingredients from Good Eggs
         </p>
       </header>
 
-      {/* Hero — compact */}
-      <section className="relative z-10 px-6 pt-6 pb-4 max-w-3xl mx-auto w-full text-center flex-shrink-0">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
+      {/* Basket Grid — THE main event, takes all available space */}
+      <section className="relative z-10 px-4 sm:px-6 flex-1 min-h-0 flex flex-col justify-center max-w-6xl mx-auto w-full">
+        <motion.h2
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.5 }}
+          className="font-serif text-xl sm:text-2xl text-warmgray-800 tracking-tight mb-3 sm:mb-4 text-center"
         >
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-warmgray-800 leading-tight tracking-tight mb-3">
-            Artisan baskets,{" "}
-            <span className="italic text-warmgray-500">locally gathered</span>
-          </h2>
+          Choose your collection
+        </motion.h2>
 
-          <p className="text-warmgray-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            Hand-picked ingredients from the best local producers.
-            Each basket is a picnic waiting to happen.
-          </p>
-        </motion.div>
-      </section>
-
-      {/* Basket Grid — 4 across, compact */}
-      <section className="relative z-10 px-4 sm:px-6 pb-4 max-w-6xl mx-auto w-full flex-1 min-h-0 flex items-start">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
           className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full"
         >
           {basketList.map((basket, i) => (
@@ -113,13 +108,6 @@ export default function HomePage() {
           ))}
         </motion.div>
       </section>
-
-      {/* Minimal footer */}
-      <footer className="relative z-10 px-6 py-2 text-center flex-shrink-0">
-        <p className="text-[10px] text-warmgray-300">
-          Giftstak &middot; All ingredients sourced from Good Eggs
-        </p>
-      </footer>
     </main>
   );
 }
@@ -141,7 +129,7 @@ function BasketCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.1 * index }}
       onClick={onClick}
-      className="group text-left bg-white/50 backdrop-blur-sm rounded-xl border border-warmgray-100
+      className="group text-left flex flex-col bg-white/50 backdrop-blur-sm rounded-xl border border-warmgray-100
                  p-3 sm:p-4 hover:border-warmgray-300 hover:shadow-lg hover:shadow-warmgray-200/40
                  transition-all duration-300 cursor-pointer"
     >
@@ -177,27 +165,13 @@ function BasketCard({
       </p>
 
       {/* Price + CTA */}
-      <div className="flex items-center justify-between">
-        <span className="font-serif text-base text-warmgray-800">
+      <div className="flex items-center justify-between mt-auto pt-2">
+        <span className="font-serif text-lg sm:text-xl text-warmgray-800 font-medium">
           ${basket.price}
         </span>
-        <span className="text-[10px] text-warmgray-400 group-hover:text-accent-gold transition-colors flex items-center gap-0.5">
-          Explore
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 16 16"
-            fill="none"
-            className="group-hover:translate-x-0.5 transition-transform"
-          >
-            <path
-              d="M3 8H13M13 8L9 4M13 8L9 12"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+        <span className="text-[10px] sm:text-xs px-2.5 py-1 rounded-full bg-warmgray-800 text-white
+                         group-hover:bg-accent-gold transition-colors">
+          Select
         </span>
       </div>
     </motion.button>
