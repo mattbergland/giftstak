@@ -176,6 +176,13 @@ function OscillatingGroup({
       groupRef.current.rotation.y =
         Math.sin(elapsed.current * ANIMATION_CONFIG.idleSwaySpeed) *
         ANIMATION_CONFIG.idleSwayAmplitude;
+    } else {
+      // Smoothly return to 0 rotation during lid-open / revealing
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y,
+        0,
+        0.05
+      );
     }
   });
 
