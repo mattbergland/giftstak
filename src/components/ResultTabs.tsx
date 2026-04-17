@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import type { BasketData } from "@/lib/basket-data";
 
@@ -95,17 +96,24 @@ function IngredientsTab({ basket }: { basket: BasketData }) {
       {basket.zones.map((zone) => (
         <div
           key={zone.id}
-          className="flex items-start gap-4 p-4 bg-white/50 rounded-lg border border-warmgray-100"
+          className="flex items-start gap-4 p-4 bg-white/50 rounded-xl border border-warmgray-100"
         >
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-warmgray-100 flex items-center justify-center">
-            <span className="text-xs font-medium text-warmgray-600">{zone.number}</span>
+          {/* Crayon product image */}
+          <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-parchment-dark border border-warmgray-100">
+            <Image
+              src={zone.imageUrl}
+              alt={zone.itemName}
+              width={64}
+              height={64}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="flex-1">
             <p className="text-[10px] uppercase tracking-widest text-accent-gold mb-0.5">
               {zone.category}
             </p>
             <h4 className="font-serif text-base text-warmgray-800">{zone.itemName}</h4>
-            <p className="text-xs text-warmgray-500 mt-0.5">{zone.brand}</p>
+            <p className="text-xs text-warmgray-500 mt-0.5">{zone.brand} · {zone.sourceRegion}</p>
             <p className="text-sm text-warmgray-500 mt-1.5 leading-relaxed">{zone.rationale}</p>
           </div>
         </div>

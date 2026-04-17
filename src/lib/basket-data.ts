@@ -14,6 +14,8 @@ export interface BasketZone {
   rationale: string;
   sourceRegion: string;
   panelPosition: PanelPosition;
+  /** Path to the crayon-styled product image */
+  imageUrl: string;
 }
 
 export type PanelPosition =
@@ -60,6 +62,7 @@ export const baskets: Record<string, BasketData> = {
           "Creamy and approachable, selected to anchor the richer cured meats and preserves.",
         sourceRegion: "Marin County",
         panelPosition: "left-top",
+        imageUrl: "/images/products/crayon/urban-sf-zone-1.jpg",
       },
       {
         id: "zone-2",
@@ -71,6 +74,7 @@ export const baskets: Record<string, BasketData> = {
           "Adds bold, savory depth and brings a city-market energy to the basket.",
         sourceRegion: "San Francisco",
         panelPosition: "right-top",
+        imageUrl: "/images/products/crayon/urban-sf-zone-2.jpg",
       },
       {
         id: "zone-3",
@@ -82,6 +86,7 @@ export const baskets: Record<string, BasketData> = {
           "A crisp, aromatic base that balances the softer textures in the box.",
         sourceRegion: "Sonoma",
         panelPosition: "left-mid",
+        imageUrl: "/images/products/crayon/urban-sf-zone-3.jpg",
       },
       {
         id: "zone-4",
@@ -93,6 +98,7 @@ export const baskets: Record<string, BasketData> = {
           "Brings brightness and fruit-forward contrast against the saltier elements.",
         sourceRegion: "Oakland",
         panelPosition: "right-mid",
+        imageUrl: "/images/products/crayon/urban-sf-zone-4.jpg",
       },
       {
         id: "zone-5",
@@ -104,6 +110,7 @@ export const baskets: Record<string, BasketData> = {
           "A briny accent that sharpens and lifts the overall tasting experience.",
         sourceRegion: "Marin County",
         panelPosition: "left-bottom",
+        imageUrl: "/images/products/crayon/urban-sf-zone-5.jpg",
       },
       {
         id: "zone-6",
@@ -115,6 +122,7 @@ export const baskets: Record<string, BasketData> = {
           "Gives the basket a satisfying final note with urban SF character.",
         sourceRegion: "San Francisco",
         panelPosition: "right-bottom",
+        imageUrl: "/images/products/crayon/urban-sf-zone-6.jpg",
       },
     ],
   },
@@ -141,6 +149,7 @@ export const baskets: Record<string, BasketData> = {
           "Lush and buttery, this cheese sets a decadent foundation for the collection.",
         sourceRegion: "Point Reyes",
         panelPosition: "left-top",
+        imageUrl: "/images/products/crayon/napa-zone-1.jpg",
       },
       {
         id: "zone-2",
@@ -152,6 +161,7 @@ export const baskets: Record<string, BasketData> = {
           "Delicate and refined, pairing beautifully with the wine-country theme.",
         sourceRegion: "Napa",
         panelPosition: "right-top",
+        imageUrl: "/images/products/crayon/napa-zone-2.jpg",
       },
       {
         id: "zone-3",
@@ -163,6 +173,7 @@ export const baskets: Record<string, BasketData> = {
           "Hearty and aromatic, providing texture contrast to the creamy elements.",
         sourceRegion: "Oakland",
         panelPosition: "left-mid",
+        imageUrl: "/images/products/crayon/napa-zone-3.jpg",
       },
       {
         id: "zone-4",
@@ -174,6 +185,7 @@ export const baskets: Record<string, BasketData> = {
           "Sweet-spicy complexity that elevates each pairing on the board.",
         sourceRegion: "Sonoma",
         panelPosition: "right-mid",
+        imageUrl: "/images/products/crayon/napa-zone-4.jpg",
       },
       {
         id: "zone-5",
@@ -185,6 +197,7 @@ export const baskets: Record<string, BasketData> = {
           "Buttery crunch that adds a satisfying snack element between bites.",
         sourceRegion: "Sacramento Valley",
         panelPosition: "left-bottom",
+        imageUrl: "/images/products/crayon/napa-zone-5.jpg",
       },
       {
         id: "zone-6",
@@ -196,6 +209,7 @@ export const baskets: Record<string, BasketData> = {
           "Floral and golden, a perfect drizzle to close the tasting journey.",
         sourceRegion: "Napa Valley",
         panelPosition: "right-bottom",
+        imageUrl: "/images/products/crayon/napa-zone-6.jpg",
       },
     ],
   },
@@ -222,6 +236,7 @@ export const baskets: Record<string, BasketData> = {
           "A fresh, tangy goat cheese that captures the brightness of Southern California.",
         sourceRegion: "Santa Paula",
         panelPosition: "left-top",
+        imageUrl: "/images/products/crayon/la-zone-1.jpg",
       },
       {
         id: "zone-2",
@@ -233,6 +248,7 @@ export const baskets: Record<string, BasketData> = {
           "A spicy, spreadable salami that brings bold heat to the board.",
         sourceRegion: "Downtown LA",
         panelPosition: "right-top",
+        imageUrl: "/images/products/crayon/la-zone-2.jpg",
       },
       {
         id: "zone-3",
@@ -244,6 +260,7 @@ export const baskets: Record<string, BasketData> = {
           "Light and crisp with a clean olive oil finish, ideal for pairing.",
         sourceRegion: "Malibu",
         panelPosition: "left-mid",
+        imageUrl: "/images/products/crayon/la-zone-3.jpg",
       },
       {
         id: "zone-4",
@@ -255,6 +272,7 @@ export const baskets: Record<string, BasketData> = {
           "Bright, citrus-forward preserves that define the LA food scene.",
         sourceRegion: "Silver Lake",
         panelPosition: "right-mid",
+        imageUrl: "/images/products/crayon/la-zone-4.jpg",
       },
       {
         id: "zone-5",
@@ -266,6 +284,7 @@ export const baskets: Record<string, BasketData> = {
           "Slow-roasted with applewood smoke for a rich, savory crunch.",
         sourceRegion: "Pasadena",
         panelPosition: "left-bottom",
+        imageUrl: "/images/products/crayon/la-zone-5.jpg",
       },
       {
         id: "zone-6",
@@ -277,6 +296,7 @@ export const baskets: Record<string, BasketData> = {
           "Handcrafted LA chocolates with a buttery, melt-in-your-mouth finish.",
         sourceRegion: "West Hollywood",
         panelPosition: "right-bottom",
+        imageUrl: "/images/products/crayon/la-zone-6.jpg",
       },
     ],
   },
@@ -303,6 +323,7 @@ export const baskets: Record<string, BasketData> = {
           "A world-class blue cheese wrapped in grape leaves \u2014 earthy and complex.",
         sourceRegion: "Central Point, OR",
         panelPosition: "left-top",
+        imageUrl: "/images/products/crayon/portland-zone-1.jpg",
       },
       {
         id: "zone-2",
@@ -314,6 +335,7 @@ export const baskets: Record<string, BasketData> = {
           "A Portland staple \u2014 bold pepper heat balanced by rich pork flavor.",
         sourceRegion: "Portland",
         panelPosition: "right-top",
+        imageUrl: "/images/products/crayon/portland-zone-2.jpg",
       },
       {
         id: "zone-3",
@@ -325,6 +347,7 @@ export const baskets: Record<string, BasketData> = {
           "Scandinavian-inspired crackers that nod to Portland\u2019s Nordic food culture.",
         sourceRegion: "Portland",
         panelPosition: "left-mid",
+        imageUrl: "/images/products/crayon/portland-zone-3.jpg",
       },
       {
         id: "zone-4",
@@ -336,6 +359,7 @@ export const baskets: Record<string, BasketData> = {
           "Oregon\u2019s signature berry, preserved at peak ripeness with minimal sugar.",
         sourceRegion: "Oregon Coast",
         panelPosition: "right-mid",
+        imageUrl: "/images/products/crayon/portland-zone-4.jpg",
       },
       {
         id: "zone-5",
@@ -347,6 +371,7 @@ export const baskets: Record<string, BasketData> = {
           "Tangy-sweet pickles that cut through the richness of cheese and meat.",
         sourceRegion: "Portland",
         panelPosition: "left-bottom",
+        imageUrl: "/images/products/crayon/portland-zone-5.jpg",
       },
       {
         id: "zone-6",
@@ -358,6 +383,7 @@ export const baskets: Record<string, BasketData> = {
           "Single-origin, stone-ground chocolate with deep, earthy notes.",
         sourceRegion: "Portland",
         panelPosition: "right-bottom",
+        imageUrl: "/images/products/crayon/portland-zone-6.jpg",
       },
     ],
   },

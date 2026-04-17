@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { basketList } from "@/lib/basket-data";
 import type { BasketData } from "@/lib/basket-data";
@@ -35,14 +36,13 @@ export default function HomePage() {
           <div className="w-12 h-px bg-warmgray-300 mx-auto mb-8" />
 
           <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl text-warmgray-800 leading-tight tracking-tight mb-6">
-            Locally curated{" "}
-            <span className="italic text-warmgray-500">gift baskets</span>
+            Artisan baskets,{" "}
+            <span className="italic text-warmgray-500">locally gathered</span>
           </h2>
 
           <p className="text-warmgray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-4">
-            Premium gift baskets filled with artisan ingredients from local
-            producers. Each collection is crafted to capture the flavors and
-            character of its city.
+            Hand-picked ingredients from the best local producers, arranged with care.
+            Each basket is a picnic waiting to happen &mdash; rustic, elegant, and rooted in place.
           </p>
 
           <p className="text-warmgray-400 text-sm max-w-lg mx-auto">
@@ -165,6 +165,9 @@ function BasketCard({
   index: number;
   onClick: () => void;
 }) {
+  // Show first 3 product images as a preview strip
+  const previewZones = basket.zones.slice(0, 3);
+
   return (
     <motion.button
       initial={{ opacity: 0, y: 16 }}
@@ -172,11 +175,30 @@ function BasketCard({
       transition={{ duration: 0.5, delay: 0.15 * index }}
       onClick={onClick}
       className="group text-left bg-white/60 rounded-xl border border-warmgray-100
-                 p-6 hover:border-warmgray-300 hover:shadow-lg hover:shadow-warmgray-200/50
+                 p-5 hover:border-warmgray-300 hover:shadow-lg hover:shadow-warmgray-200/50
                  transition-all duration-300 cursor-pointer"
     >
-      {/* Emoji + City */}
-      <div className="text-3xl mb-3">{basket.imageEmoji}</div>
+      {/* Product image preview strip */}
+      <div className="flex gap-2 mb-4">
+        {previewZones.map((zone) => (
+          <div
+            key={zone.id}
+            className="w-16 h-16 rounded-lg overflow-hidden bg-parchment-dark border border-warmgray-100"
+          >
+            <Image
+              src={zone.imageUrl}
+              alt={zone.itemName}
+              width={64}
+              height={64}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ))}
+        <div className="w-16 h-16 rounded-lg bg-warmgray-100/50 border border-warmgray-100 flex items-center justify-center">
+          <span className="text-xs text-warmgray-400">+{basket.zones.length - 3}</span>
+        </div>
+      </div>
+
       <p className="text-[10px] uppercase tracking-[0.2em] text-accent-gold mb-1">
         {basket.region}
       </p>
